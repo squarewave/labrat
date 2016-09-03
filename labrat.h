@@ -14,10 +14,10 @@
 //
 //      ...
 //
-//      TEST_CALC()
+//      TEST_CASE(test_calculates)
 //      {
-//          const char* calc_str = "15 + 5";
-//          int result = my_calculator_calc_int(calc_str);
+//          const char* calc_str = "15 5 +";
+//          int result = calculate(calc_str);
 //
 //          ASSERT_EQ(20, result, "%d"); // expected, actual, format
 //      }
@@ -75,14 +75,14 @@
 #endif
 ////////////////////////////////////////////////////////////////////////////////
 
-#define LR_COLOR_DEF  "\x1B[0m"
-#define LR_COLOR_RED  "\x1B[31m"
-#define LR_COLOR_GRN  "\x1B[32m"
-#define LR_COLOR_YEL  "\x1B[33m"
-#define LR_COLOR_BLU  "\x1B[34m"
-#define LR_COLOR_MAG  "\x1B[35m"
-#define LR_COLOR_CYN  "\x1B[36m"
-#define LR_COLOR_WHT  "\x1B[37m"
+#include "windows.h"
+HANDLE _lr_console_h = 0;
+
+#define LR_SET_COLOR_GRN() SetConsoleTextAttribute(_lr_console_h, 2) 
+#define LR_SET_COLOR_RED() SetConsoleTextAttribute(_lr_console_h, 4) 
+#define LR_SET_COLOR_DEF() SetConsoleTextAttribute(_lr_console_h, 7) 
+#define LR_SET_COLOR_YEL() SetConsoleTextAttribute(_lr_console_h, 6) 
+#define LR_SET_COLOR_WHT() SetConsoleTextAttribute(_lr_console_h, 15) 
 
 static bool __lr_test_passed;
 static int64_t __lr_benchmark_time;
@@ -100,103 +100,117 @@ static int64_t __lr_benchmark_end;
 
 #define TEST_CASE(__lr_test_id__) void __lr_test_id__(void)
 #define BENCHMARK(__lr_bench_id__, __lr_iterations__) \
-    void __lr_bench_id__(i64 __lr_iterations__)
+    void __lr_bench_id__(int64_t __lr_iterations__)
 #define BEGIN_BENCHMARK() __lr_benchmark_start = _LR_GETCYCLES()
 #define END_BENCHMARK() __lr_benchmark_end = _LR_GETCYCLES()
 
 #define ASSERT_TRUE(exp) do { \
-        if (!(exp)) { \
-            printf("%sAssertion Failed:\n" \
-                   "Expected (%s) to be true -- %s, line %d%s\n", \
-                   LR_COLOR_YEL, #exp, _LR_FILENAME, __LINE__, LR_COLOR_DEF); \
-            __lr_test_passed = false; \
-            return; \
-        } \
+    if (!(exp)) { \
+        LR_SET_COLOR_YEL(); \
+        printf("Assertion Failed:\n" \
+               "Expected (%s) to be true -- %s, line %d\n", \
+               #exp, _LR_FILENAME, __LINE__); \
+        __lr_test_passed = false; \
+        LR_SET_COLOR_DEF(); \
+        return; \
+    } \
 } while (0)
 
 #define ASSERT_FALSE(exp) do { \
-        if (exp) { \
-            printf("%sAssertion Failed:\n" \
-                   "Expected (%s) to be false -- %s, line %d%s\n", \
-                   LR_COLOR_YEL, #exp, _LR_FILENAME, __LINE__, LR_COLOR_DEF); \
-            __lr_test_passed = false; \
-            return; \
-        } \
+    if (exp) { \
+        LR_SET_COLOR_YEL(); \
+        printf("Assertion Failed:\n" \
+               "Expected (%s) to be false -- %s, line %d\n", \
+               #exp, _LR_FILENAME, __LINE__); \
+        __lr_test_passed = false; \
+        LR_SET_COLOR_DEF(); \
+        return; \
+    } \
 } while (0)
 
 #define ASSERT_EQ(actual, expected, format) do { \
-        if ((expected) != (actual)) { \
-            printf("%sAssertion Failed:\n" \
-                   "Expected "format " to equal "format " -- %s, line %d%s\n", \
-                   LR_COLOR_YEL, \
-                   (actual), (expected), _LR_FILENAME, __LINE__, \
-                   LR_COLOR_DEF); \
-            __lr_test_passed = false; \
-            return; \
-        } \
+    if ((expected) != (actual)) { \
+        LR_SET_COLOR_YEL(); \
+        printf("Assertion Failed:\n" \
+               "Expected "format " to equal "format " -- %s, line %d\n", \
+               (actual), (expected), _LR_FILENAME, __LINE__); \
+        __lr_test_passed = false; \
+        LR_SET_COLOR_DEF(); \
+        return; \
+    } \
 } while (0)
 
 #define ASSERT_NOT_EQ(actual, comp, format) do { \
-        if ((comp) == (actual)) { \
-            printf("%sAssertion Failed:\n" \
-                   "Expected "format " to not equal "format " -- %s, line %d%s\n", \
-                   LR_COLOR_YEL, \
-                   actual, comp, _LR_FILENAME, __LINE__, \
-                   LR_COLOR_DEF); \
-            __lr_test_passed = false; \
-            return; \
-        } \
+    if ((comp) == (actual)) { \
+        LR_SET_COLOR_YEL(); \
+        printf("Assertion Failed:\n" \
+               "Expected "format " to not equal "format " -- %s, line %d\n", \
+               actual, comp, _LR_FILENAME, __LINE__); \
+        __lr_test_passed = false; \
+        LR_SET_COLOR_DEF(); \
+        return; \
+    } \
 } while (0)
 
 #define ASSERT_GT(actual, comp, format) do { \
-        if ((comp) <= (actual)) { \
-            printf("%sAssertion Failed:\n" \
-                   "Expected "format " to be greater than "format " -- %s, line %d%s\n", \
-                   LR_COLOR_YEL, \
-                   actual, comp, _LR_FILENAME, __LINE__, \
-                   LR_COLOR_DEF); \
-            __lr_test_passed = false; \
-            return; \
-        } \
+    if ((comp) <= (actual)) { \
+        LR_SET_COLOR_YEL(); \
+        printf("Assertion Failed:\n" \
+               "Expected "format " to be greater than "format " -- %s, line %d\n", \
+               actual, comp, _LR_FILENAME, __LINE__); \
+        __lr_test_passed = false; \
+        LR_SET_COLOR_DEF(); \
+        return; \
+    } \
 } while (0)
 
 #define ASSERT_LT(actual, comp, format) do { \
-        if ((comp) >= (actual)) { \
-            printf("%sAssertion Failed:\n" \
-                   "Expected "format " to be less than "format " -- %s, line %d%s\n", \
-                   LR_COLOR_YEL, \
-                   actual, comp, _LR_FILENAME, __LINE__, \
-                   LR_COLOR_DEF); \
-            __lr_test_passed = false; \
-            return; \
-        } \
+    if ((comp) >= (actual)) { \
+        LR_SET_COLOR_YEL(); \
+        printf("Assertion Failed:\n" \
+               "Expected "format " to be less than "format " -- %s, line %d\n", \
+               actual, comp, _LR_FILENAME, __LINE__); \
+        __lr_test_passed = false; \
+        LR_SET_COLOR_DEF(); \
+        return; \
+    } \
 } while (0)
 
 #define ASSERT_GT_OR_EQ(actual, comp, format) do { \
-        if ((comp) < (actual)) { \
-            printf("%sAssertion Failed:\n" \
-                   "Expected "format " to be greater than or equal to "format " -- %s, " \
-                   "line %d%s\n", \
-                   LR_COLOR_YEL, \
-                   actual, comp, _LR_FILENAME, __LINE__, \
-                   LR_COLOR_DEF); \
-            __lr_test_passed = false; \
-            return; \
-        } \
+    if ((comp) < (actual)) { \
+        LR_SET_COLOR_YEL(); \
+        printf("Assertion Failed:\n" \
+               "Expected "format " to be greater than or equal to "format " -- %s, " \
+               "line %d\n", \
+               actual, comp, _LR_FILENAME, __LINE__); \
+        __lr_test_passed = false; \
+        LR_SET_COLOR_DEF(); \
+        return; \
+    } \
 } while (0)
 
 #define ASSERT_LT_OR_EQ(actual, comp, format) do { \
-        if ((comp) > (actual)) { \
-            printf("%sAssertion Failed:\n" \
-                   "Expected "format " to be less than or equal to " \
-                   format " -- %s, line %d%s\n", \
-                   LR_COLOR_YEL, \
-                   actual, comp, _LR_FILENAME, __LINE__, \
-                   LR_COLOR_DEF); \
-            __lr_test_passed = false; \
-            return; \
-        } \
+    if ((comp) > (actual)) { \
+        LR_SET_COLOR_YEL(); \
+        printf("Assertion Failed:\n" \
+               "Expected "format " to be less than or equal to " \
+               format " -- %s, line %d\n", \
+               actual, comp, _LR_FILENAME, __LINE__); \
+        __lr_test_passed = false; \
+        LR_SET_COLOR_DEF(); \
+        return; \
+    } \
 } while (0)
+
+#define LR_PRELUDE(argc, argv) do {\
+    if (argc == 2 && strcmp("--lr-run-tests", argv[1]) == 0) {\
+        _lr_console_h = GetStdHandle(STD_OUTPUT_HANDLE);\
+        lr_run_tests();\
+    } else if (argc == 3 && strcmp("--lr-run-benchmarks", argv[1]) == 0) {\
+        _lr_console_h = GetStdHandle(STD_OUTPUT_HANDLE);\
+        int64_t _lr_iterations = atoi(argv[2]);\
+        lr_run_benchmarks(_lr_iterations);\
+    } } while(0)
 
 void lr_run_tests(void);
 
@@ -263,16 +277,22 @@ static void *lr__sbgrowf(void *arr, int64_t increment, int64_t itemsize)
 ////////////////////////////////////////////////////////////////////////////////
 /******************************************************************************/
 
+#include "windows.h"
+
 #if !defined(LR_GEN_EXECUTABLE) || defined(LR_SELF_TEST)
 bool __lr_test_definition(void (*func)(void), const char *name)
 {
     __lr_test_passed = true;
     func();
     if (__lr_test_passed) {
-        printf("%s\t[ PASSED ] -- %s%s\n", LR_COLOR_GRN, name, LR_COLOR_DEF);
+        LR_SET_COLOR_GRN();
+        printf("\t[ PASSED ] -- %s\n", name);
+        LR_SET_COLOR_DEF();
         return true;
     } else {
-        printf("%s\t[ FAILED ] -- %s%s\n", LR_COLOR_RED, name, LR_COLOR_DEF);
+        LR_SET_COLOR_RED();
+        printf("\t[ FAILED ] -- %s\n", name);
+        LR_SET_COLOR_DEF();
         return false;
     }
 }
@@ -280,7 +300,9 @@ bool __lr_test_definition(void (*func)(void), const char *name)
 void lr_run_tests(void)
 {
 #ifndef LR_OFF // just produce an empty function if LR_OFF
-    printf("%s\nRunning tests:%s\n\n", LR_COLOR_WHT, LR_COLOR_DEF);
+    LR_SET_COLOR_WHT();
+    printf("\nRunning tests:\n\n");
+    LR_SET_COLOR_DEF();
 
     bool tests[] = {
         0,
@@ -301,17 +323,27 @@ void lr_run_tests(void)
             passed++;
 
     bool all_passed = passed == total;
-    printf("%s\nFinished running tests: "
-           "%s%d%s of %d tests passed (%s%d%s failed)%s\n",
-           LR_COLOR_WHT,
-           all_passed ? LR_COLOR_GRN : LR_COLOR_RED,
-           passed,
-           LR_COLOR_WHT,
-           total,
-           all_passed ? LR_COLOR_GRN : LR_COLOR_RED,
-           total - passed,
-           LR_COLOR_WHT,
-           LR_COLOR_DEF);
+    puts("\nFinished running tests: ");
+    if (all_passed) {
+        LR_SET_COLOR_GRN();
+    } else {
+        LR_SET_COLOR_RED();
+    }
+    printf("%d ", passed);
+    LR_SET_COLOR_WHT();
+
+    printf("of %d tests passed (", total);
+
+    if (all_passed) {
+        LR_SET_COLOR_GRN();
+    } else {
+        LR_SET_COLOR_RED();
+    }
+    printf("%d", total - passed);
+    LR_SET_COLOR_WHT();
+
+    puts(" failed)\n");
+    LR_SET_COLOR_DEF();
 #endif // #ifndef LR_OFF
 }
 
@@ -320,7 +352,9 @@ void lr_run_benchmarks(int64_t iterations)
 #ifndef LR_OFF // just produce an empty function if LR_OFF
     int32_t tests_passed = 0;
     int32_t total_tests = 0;
-    printf("%s\nRunning benchmarks:%s\n\n", LR_COLOR_WHT, LR_COLOR_DEF);
+    LR_SET_COLOR_WHT();
+    printf("\nRunning benchmarks:\n\n");
+    LR_SET_COLOR_DEF();
 
     uint64_t start_time;
     uint64_t end_time;
@@ -349,18 +383,20 @@ void lr_run_benchmarks(int64_t iterations)
     if (__lr_benchmark_end != -1) { \
         end_time = __lr_benchmark_end; \
     } \
-    printf("%s\t[ FINISHED ] -- " \
-           "%-*s: %12lld cycles / iteration %s\n", \
-           LR_COLOR_MAG, \
+    LR_SET_COLOR_WHT();\
+    printf("\t[ FINISHED ] -- " \
+           "%-*s: %12lld cycles / iteration\n", \
            max_bench_name_size + 2, \
            #id, \
-           (end_time - start_time) / iterations, \
-           LR_COLOR_DEF);
+           (end_time - start_time) / iterations);\
+    LR_SET_COLOR_DEF();
 #include "labrat_data.c"
 #undef BENCH_DEFINITION
 
     bool all_passed = tests_passed == total_tests;
-    printf("%s\nFinished running benchmarks.", LR_COLOR_WHT);
+    LR_SET_COLOR_WHT();
+    printf("\nFinished running benchmarks.");
+    LR_SET_COLOR_DEF();
 #endif // #ifndef LR_OFF
 }
 #endif // #if !defined(LR_GEN_EXECUTABLE) || defined(LR_SELF_TEST)
@@ -565,32 +601,6 @@ inline lr_slice_t lr_eat_whitespace_and_comments(lr_slice_t s)
 {
     char *data = s.data;
     int64_t len = s.len;
-
-    enum {
-        STATE_DEFAULT;
-        STATE_SLASH;
-        STATE_LINE_COMMENT;
-        STATE_MULTILINE_COMMENT;
-        STATE_STAR;
-        STATE_END;
-    };
-
-    state = STATE_DEFAULT;
-
-    while (len > 0 && state != STATE_END) {
-        switch (state) {
-            case STATE_DEFAULT: {
-            } break;
-            case STATE_SLASH: {
-            } break;
-            case STATE_LINE_COMMENT: {
-            } break;
-            case STATE_MULTILINE_COMMENT: {
-            } break;
-            case STATE_STAR: {
-            } break;
-        }
-    }
 
     while (len > 0) {
         if (lr_is_whitespace(*data)) {
@@ -991,6 +1001,7 @@ int32_t main(int argc, char const *argv[])
     for (int32_t i = 0; i < file_count; i++) {
         if (should_exclude_file(files[i]))
             continue;
+        puts(files[i]);
 
         lr_slice_t filedata = lr_read_file(files[i]);
         if (!filedata.data) {
