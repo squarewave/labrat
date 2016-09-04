@@ -31,3 +31,8 @@
 # Debug files
 *.dSYM/
 *.su
+
+# labrat executable
+labrat
+program
+labrat_data.c
