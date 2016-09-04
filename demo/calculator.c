@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <assert.h>
+#include "calculator.h"
 
 int calculate(char* str)
 {

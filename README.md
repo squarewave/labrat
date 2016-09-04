@@ -53,6 +53,33 @@ gcc program.c calculator.c -o program
 
 ![sample output](https://github.com/SquareWave/labrat/blob/master/demo/demo.png?raw=true)
 
+
+
+### Using MSVC (command line):
+```bat
+:: run the setup provided by Visual Studio to get the command line working
+"C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64
+
+:: generate the labrat executable
+cl /TC /DLR_GEN_EXECUTABLE labrat.h
+
+:: run labrat to generate test metadata
+labrat.exe
+
+:: compile our program
+cl program.c calculator.c
+
+:: run the tests
+program.exe --lr-run-tests
+
+:: run benchmarks
+program.exe --lr-run-benchmarks 1000
+
+```
+
+![sample output on Windows](https://github.com/SquareWave/labrat/blob/master/demo/demo_win32.png?raw=true)
+
+
 ## How it Works
 
 It works by recursively grabbing every source and header file in the

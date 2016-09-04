@@ -60,30 +60,6 @@
 #include <stdbool.h>
 #include <string.h>
 
-#ifdef _WIN32
-
-#include <windows.h>
-#include <intrin.h>
-HANDLE _lr_console_h = 0;
-#define LR_SET_COLOR_GRN() SetConsoleTextAttribute(_lr_console_h, 2) 
-#define LR_SET_COLOR_RED() SetConsoleTextAttribute(_lr_console_h, 4) 
-#define LR_SET_COLOR_DEF() SetConsoleTextAttribute(_lr_console_h, 7) 
-#define LR_SET_COLOR_YEL() SetConsoleTextAttribute(_lr_console_h, 6) 
-#define LR_SET_COLOR_WHT() SetConsoleTextAttribute(_lr_console_h, 15) 
-
-#else
-
-#include <dirent.h>
-#include <x86intrin.h>
-
-#define LR_SET_COLOR_GRN() printf("\x1b[32m")
-#define LR_SET_COLOR_RED() printf("\x1b[31m")
-#define LR_SET_COLOR_DEF() printf("\x1b[0m")
-#define LR_SET_COLOR_YEL() printf("\x1b[33m")
-#define LR_SET_COLOR_WHT() printf("\x1b[34m")
-
-#endif
-
 #pragma warning(pop)
 
 // This will forward declare all of our test and benchmark functions so they
@@ -97,11 +73,16 @@ HANDLE _lr_console_h = 0;
 #endif
 ////////////////////////////////////////////////////////////////////////////////
 
+void _lr_set_color_grn();
+void _lr_set_color_red();
+void _lr_set_color_def();
+void _lr_set_color_yel();
+void _lr_set_color_wht();
 
-static bool __lr_test_passed;
-static int64_t __lr_benchmark_time;
-static int64_t __lr_benchmark_start;
-static int64_t __lr_benchmark_end;
+void _lr_begin_benchmark();
+void _lr_end_benchmark();
+
+void _lr_fail_current_test();
 
 #define _LR_GETCYCLES() __rdtsc()
 #define _LR_ARRAY_COUNT(array) sizeof(array) / sizeof(array[0])
@@ -120,98 +101,98 @@ static int64_t __lr_benchmark_end;
 
 #define ASSERT_TRUE(exp) do { \
     if (!(exp)) { \
-        LR_SET_COLOR_YEL(); \
+        _lr_set_color_yel(); \
         printf("Assertion Failed:\n" \
                "Expected (%s) to be true -- %s, line %d\n", \
                #exp, _LR_FILENAME, __LINE__); \
-        __lr_test_passed = false; \
-        LR_SET_COLOR_DEF(); \
+        _lr_fail_current_test(); \
+        _lr_set_color_def(); \
         return; \
     } \
 } while (0)
 
 #define ASSERT_FALSE(exp) do { \
     if (exp) { \
-        LR_SET_COLOR_YEL(); \
+        _lr_set_color_yel(); \
         printf("Assertion Failed:\n" \
                "Expected (%s) to be false -- %s, line %d\n", \
                #exp, _LR_FILENAME, __LINE__); \
-        __lr_test_passed = false; \
-        LR_SET_COLOR_DEF(); \
+        _lr_fail_current_test(); \
+        _lr_set_color_def(); \
         return; \
     } \
 } while (0)
 
 #define ASSERT_EQ(actual, expected, format) do { \
     if ((expected) != (actual)) { \
-        LR_SET_COLOR_YEL(); \
+        _lr_set_color_yel(); \
         printf("Assertion Failed:\n" \
                "Expected "format " to equal "format " -- %s, line %d\n", \
                (actual), (expected), _LR_FILENAME, __LINE__); \
-        __lr_test_passed = false; \
-        LR_SET_COLOR_DEF(); \
+        _lr_fail_current_test(); \
+        _lr_set_color_def(); \
         return; \
     } \
 } while (0)
 
 #define ASSERT_NOT_EQ(actual, comp, format) do { \
     if ((comp) == (actual)) { \
-        LR_SET_COLOR_YEL(); \
+        _lr_set_color_yel(); \
         printf("Assertion Failed:\n" \
                "Expected "format " to not equal "format " -- %s, line %d\n", \
                actual, comp, _LR_FILENAME, __LINE__); \
-        __lr_test_passed = false; \
-        LR_SET_COLOR_DEF(); \
+        _lr_fail_current_test(); \
+        _lr_set_color_def(); \
         return; \
     } \
 } while (0)
 
 #define ASSERT_GT(actual, comp, format) do { \
     if ((comp) <= (actual)) { \
-        LR_SET_COLOR_YEL(); \
+        _lr_set_color_yel(); \
         printf("Assertion Failed:\n" \
                "Expected "format " to be greater than "format " -- %s, line %d\n", \
                actual, comp, _LR_FILENAME, __LINE__); \
-        __lr_test_passed = false; \
-        LR_SET_COLOR_DEF(); \
+        _lr_fail_current_test(); \
+        _lr_set_color_def(); \
         return; \
     } \
 } while (0)
 
 #define ASSERT_LT(actual, comp, format) do { \
     if ((comp) >= (actual)) { \
-        LR_SET_COLOR_YEL(); \
+        _lr_set_color_yel(); \
         printf("Assertion Failed:\n" \
                "Expected "format " to be less than "format " -- %s, line %d\n", \
                actual, comp, _LR_FILENAME, __LINE__); \
-        __lr_test_passed = false; \
-        LR_SET_COLOR_DEF(); \
+        _lr_fail_current_test(); \
+        _lr_set_color_def(); \
         return; \
     } \
 } while (0)
 
 #define ASSERT_GT_OR_EQ(actual, comp, format) do { \
     if ((comp) < (actual)) { \
-        LR_SET_COLOR_YEL(); \
+        _lr_set_color_yel(); \
         printf("Assertion Failed:\n" \
                "Expected "format " to be greater than or equal to "format " -- %s, " \
                "line %d\n", \
                actual, comp, _LR_FILENAME, __LINE__); \
-        __lr_test_passed = false; \
-        LR_SET_COLOR_DEF(); \
+        _lr_fail_current_test(); \
+        _lr_set_color_def(); \
         return; \
     } \
 } while (0)
 
 #define ASSERT_LT_OR_EQ(actual, comp, format) do { \
     if ((comp) > (actual)) { \
-        LR_SET_COLOR_YEL(); \
+        _lr_set_color_yel(); \
         printf("Assertion Failed:\n" \
                "Expected "format " to be less than or equal to " \
                format " -- %s, line %d\n", \
                actual, comp, _LR_FILENAME, __LINE__); \
-        __lr_test_passed = false; \
-        LR_SET_COLOR_DEF(); \
+        _lr_fail_current_test(); \
+        _lr_set_color_def(); \
         return; \
     } \
 } while (0)
@@ -225,7 +206,7 @@ static int64_t __lr_benchmark_end;
         exit(0);\
     } else if (argc == 3 && strcmp("--lr-run-benchmarks", argv[1]) == 0) {\
         _lr_console_h = GetStdHandle(STD_OUTPUT_HANDLE);\
-        int64_t _lr_iterations = atoi(argv[2]);\
+        uint64_t _lr_iterations = atoi(argv[2]);\
         lr_run_benchmarks(_lr_iterations);\
         exit(0);\
     }\
@@ -238,7 +219,7 @@ static int64_t __lr_benchmark_end;
         lr_run_tests();\
         exit(0);\
     } else if (argc == 3 && strcmp("--lr-run-benchmarks", argv[1]) == 0) {\
-        int64_t _lr_iterations = atoi(argv[2]);\
+        uint64_t _lr_iterations = atoi(argv[2]);\
         lr_run_benchmarks(_lr_iterations);\
         exit(0);\
     }\
@@ -263,6 +244,91 @@ void lr_run_tests(void);
 /******************************************************************************/
 
 #ifdef LR_IMPLEMENTATION
+
+#ifdef _WIN32
+
+#include <windows.h>
+#include <intrin.h>
+
+HANDLE _lr_console_h = 0;
+
+void _lr_set_color_grn()
+{
+    SetConsoleTextAttribute(_lr_console_h, 2);
+}
+
+void _lr_set_color_red()
+{
+    SetConsoleTextAttribute(_lr_console_h, 4);
+}
+
+void _lr_set_color_def()
+{
+    SetConsoleTextAttribute(_lr_console_h, 7);
+}
+
+void _lr_set_color_yel()
+{
+    SetConsoleTextAttribute(_lr_console_h, 6);
+}
+
+void _lr_set_color_wht()
+{
+    SetConsoleTextAttribute(_lr_console_h, 15);
+}
+
+
+#else
+
+#include <dirent.h>
+#include <x86intrin.h>
+
+void _lr_set_color_grn()
+{
+    printf("\x1b[32m");
+}
+
+void _lr_set_color_red()
+{
+    printf("\x1b[31m");
+}
+
+void _lr_set_color_def()
+{
+    printf("\x1b[0m");
+}
+
+void _lr_set_color_yel()
+{
+    printf("\x1b[33m");
+}
+
+void _lr_set_color_wht()
+{
+    printf("\x1b[34m");
+}
+
+
+#endif
+
+bool __lr_test_passed;
+int64_t __lr_benchmark_start;
+int64_t __lr_benchmark_end;
+
+void _lr_begin_benchmark()
+{
+    __lr_benchmark_start = _LR_GETCYCLES();
+}
+
+void _lr_end_benchmark()
+{
+    __lr_benchmark_end = _LR_GETCYCLES();
+}
+
+void _lr_fail_current_test()
+{
+    __lr_test_passed = false;
+}
 
 /******************************************************************************/
 ////////////////////// Sean Barrett's Stretchy Buffer///////////////////////////
@@ -317,14 +383,14 @@ bool __lr_test_definition(void (*func)(void), const char *name)
     __lr_test_passed = true;
     func();
     if (__lr_test_passed) {
-        LR_SET_COLOR_GRN();
+        _lr_set_color_grn();
         printf("    [ PASSED ] -- %s\n", name);
-        LR_SET_COLOR_DEF();
+        _lr_set_color_def();
         return true;
     } else {
-        LR_SET_COLOR_RED();
+        _lr_set_color_red();
         printf("    [ FAILED ] -- %s\n", name);
-        LR_SET_COLOR_DEF();
+        _lr_set_color_def();
         return false;
     }
 }
@@ -332,9 +398,9 @@ bool __lr_test_definition(void (*func)(void), const char *name)
 void lr_run_tests(void)
 {
 #ifndef LR_OFF // just produce an empty function if LR_OFF
-    LR_SET_COLOR_WHT();
+    _lr_set_color_wht();
     printf("\nRunning tests:\n\n");
-    LR_SET_COLOR_DEF();
+    _lr_set_color_def();
 
     bool tests[] = {
         0,
@@ -357,36 +423,36 @@ void lr_run_tests(void)
     bool all_passed = passed == total;
     puts("\nFinished running tests: ");
     if (all_passed) {
-        LR_SET_COLOR_GRN();
+        _lr_set_color_grn();
     } else {
-        LR_SET_COLOR_RED();
+        _lr_set_color_red();
     }
     printf("%d ", passed);
-    LR_SET_COLOR_WHT();
+    _lr_set_color_wht();
 
     printf("of %d tests passed (", total);
 
     if (all_passed) {
-        LR_SET_COLOR_GRN();
+        _lr_set_color_grn();
     } else {
-        LR_SET_COLOR_RED();
+        _lr_set_color_red();
     }
     printf("%d", total - passed);
-    LR_SET_COLOR_WHT();
+    _lr_set_color_wht();
 
     puts(" failed)\n");
-    LR_SET_COLOR_DEF();
+    _lr_set_color_def();
 #endif // #ifndef LR_OFF
 }
 
-void lr_run_benchmarks(int64_t iterations)
+void lr_run_benchmarks(uint64_t iterations)
 {
 #ifndef LR_OFF // just produce an empty function if LR_OFF
     int32_t tests_passed = 0;
     int32_t total_tests = 0;
-    LR_SET_COLOR_WHT();
+    _lr_set_color_wht();
     printf("\nRunning benchmarks:\n\n");
-    LR_SET_COLOR_DEF();
+    _lr_set_color_def();
 
     uint64_t start_time;
     uint64_t end_time;
@@ -415,20 +481,20 @@ void lr_run_benchmarks(int64_t iterations)
     if (__lr_benchmark_end != -1) { \
         end_time = __lr_benchmark_end; \
     } \
-    LR_SET_COLOR_WHT();\
+    _lr_set_color_wht();\
     printf("    [ FINISHED ] -- " \
-           "%-*s: %12ld cycles / iteration\n", \
+           "%-*s: %12I64u cycles / iteration\n", \
            max_bench_name_size + 2, \
            #id, \
            (end_time - start_time) / iterations);\
-    LR_SET_COLOR_DEF();
+    _lr_set_color_def();
 #include "labrat_data.c"
 #undef BENCH_DEFINITION
 
     bool all_passed = tests_passed == total_tests;
-    LR_SET_COLOR_WHT();
+    _lr_set_color_wht();
     printf("\nFinished running benchmarks.");
-    LR_SET_COLOR_DEF();
+    _lr_set_color_def();
 #endif // #ifndef LR_OFF
 }
 #endif // #if !defined(LR_GEN_EXECUTABLE) || defined(LR_SELF_TEST)
@@ -666,9 +732,11 @@ char **lr_get_directory(char *start_dir, int64_t *file_count)
             }
         } while ((fd = readdir(dir)));
 
+        closedir(dir);
+
 #endif // /_WIN32
         if (dir_path != start_dir)
-            free(dir);
+            free(dir_path);
     }
 
     *file_count = lr_sb_count(result);
