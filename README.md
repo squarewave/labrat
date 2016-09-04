@@ -32,7 +32,7 @@ int main(int argc, char const *argv[])
 }
 ```
 
-### Using clang:
+### Using GCC:
 ```sh
 # generate the labrat executable
 gcc -x c labrat.h -D LR_GEN_EXECUTABLE -o labrat
