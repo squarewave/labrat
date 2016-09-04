@@ -88,3 +88,10 @@ directory, tokenizing them, and searching for the `TEST_CASE` and
 all of the necessary information for running the tests. Then when
 you want to run your tests, it just includes this file in such a way
 that it generates code which handles running the tests.
+
+## Why just the single header file?
+
+To me it's an elegant way of writing a library. No fussing with package managers
+or fussing with the fact that Windows still doesn't even have a decent package
+manager. Just drop the file in and you're ready. I wish it were my idea, but I
+actually 100% stole it from [here](https://github.com/nothings/stb).
