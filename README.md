@@ -4,7 +4,7 @@ A simple, single-file test harness for C/C++. Allows specifying test cases and
 benchmarks alongside your code, and running your tests through a simple flag
 to your main application. Here's an example:
 
-```
+```c
 // inside calculator.c:
 
 ...
@@ -14,11 +14,11 @@ TEST_CASE(test_calculates)
     const char* calc_str = "15 5 +";
     int result = calculate(calc_str);
 
-    ASSERT_EQ(20, result, "%d");  expected, actual, format
+    ASSERT_EQ(result, 20, "%d");  // actual, expected, format
 }
 ```
 
-```
+```c
 // inside main.c
 
 #define LR_IMPLEMENTATION
@@ -33,7 +33,7 @@ int main(int argc, char const *argv[])
 ```
 
 ### Using clang:
-```
+```sh
 # generate the labrat executable
 gcc -x c labrat.h -D LR_GEN_EXECUTABLE -o labrat
 
@@ -50,3 +50,5 @@ gcc program.c calculator.c -o program
 ./program --lr-run-benchmarks 1000
 
 ```
+
+![sample output](https://github.com/SquareWave/labrat/blob/master/demo/demo.png?raw=true)
