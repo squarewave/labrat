@@ -56,8 +56,8 @@ gcc program.c calculator.c -o program
 ## How it Works
 
 It works by recursively grabbing every source and header file in the
-directory, tokenizing them, and searching for the TEST_CASE and
-BENCHMARK tokens. It then builds a labrat_data.c file which includes
+directory, tokenizing them, and searching for the `TEST_CASE` and
+`BENCHMARK` tokens. It then builds a `labrat_data.c` file which includes
 all of the necessary information for running the tests. Then when
 you want to run your tests, it just includes this file in such a way
 that it generates code which handles running the tests.
