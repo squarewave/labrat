@@ -88,3 +88,26 @@ directory, tokenizing them, and searching for the `TEST_CASE` and
 all of the necessary information for running the tests. Then when
 you want to run your tests, it just includes this file in such a way
 that it generates code which handles running the tests.
+
+## Why just the single header file?
+
+To me it's an elegant way of writing a library. No fussing with package managers
+or fussing with the fact that Windows still doesn't even have a decent package
+manager. Just drop the file in and you're ready. I wish it were my idea, but I
+actually 100% stole it from [here](https://github.com/nothings/stb).
+
+## Why should I use labrat instead of X?
+
+There are many, many C/C++ testing frameworks, and I definitely don't claim that
+labrat is the best choice in all cases. But there are a few things that are nice
+about it:
+- A single header file handles everything, so there's minimal fussing required
+- Labrat automatically detects your tests for you - just define them wherever
+  you want to define them and you're all set.
+- Labrat doesn't care about your build system, and you don't have to define a
+  separate build for your tests. Just use the `LR_PRELUDE` macro in your normal
+  entry point, run the `labrat` binary whenever you add or remove a test,
+  and then labrat will run your tests based on your command line arguments.
+- Labrat has first-class support for benchmarking. Just use the `BENCHMARK`
+  macro, and the `--lr-run-benchmarks` flag to get a quick and lightweight
+  measure of whether you're making your code faster or slower.
